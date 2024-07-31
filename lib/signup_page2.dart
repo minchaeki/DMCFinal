@@ -56,10 +56,21 @@ class _SignupPage2State extends State<SignupPage2> {
                   selected: _selectedConditions[idx],
                   onSelected: (bool selected) {
                     setState(() {
-                      _selectedConditions[idx] = selected;
+                      if (idx == 2 && selected) {
+                        // '해당 사항 없음'이 선택되면 다른 모든 선택 해제
+                        for (int i = 0; i < _selectedConditions.length; i++) {
+                          _selectedConditions[i] = (i == 2);
+                        }
+                      } else {
+                        _selectedConditions[idx] = selected;
+                        if (selected) {
+                          _selectedConditions[2] =
+                              false; // 다른 선택 시 '해당 사항 없음' 해제
+                        }
+                      }
                     });
                   },
-                  selectedColor: Colors.blue,
+                  selectedColor: const Color.fromARGB(255, 173, 216, 230),
                   backgroundColor: Colors.grey[200],
                 );
               }).toList(),
@@ -87,7 +98,7 @@ class _SignupPage2State extends State<SignupPage2> {
                       CircleAvatar(
                         radius: 15,
                         backgroundColor: _activityLevel == level
-                            ? Colors.blue
+                            ? const Color.fromARGB(255, 173, 216, 230)
                             : Colors.grey[300],
                         child: Text(
                           '$level',
@@ -124,6 +135,11 @@ class _SignupPage2State extends State<SignupPage2> {
                 },
                 child: const Text('기록하기',
                     style: TextStyle(fontFamily: 'Quicksand')),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: const Color.fromARGB(255, 102, 102, 102),
+                  backgroundColor:
+                      const Color.fromARGB(255, 240, 240, 240), // 버튼 텍스트 색상
+                ),
               ),
             ),
           ],

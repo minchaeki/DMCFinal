@@ -21,8 +21,10 @@ class _HealthPageState extends State<HealthPage> {
       'data': <BloodPressureData>[],
     },
     '혈당': {
-      'value': 0,
-      'data': <BloodSugarData>[],
+      'fasting': 0,
+      'postMeal': 0,
+      'dataFasting': <BloodSugarData>[],
+      'dataPostMeal': <BloodSugarData>[],
     },
     '체중': {
       'value': 0.0,
@@ -116,7 +118,10 @@ class _HealthPageState extends State<HealthPage> {
 
   // 혈당 입력 다이얼로그 표시
   void _showBloodSugarDialog(BuildContext context) {
-    final TextEditingController bloodSugarController = TextEditingController();
+    final TextEditingController bloodSugarFastingController =
+        TextEditingController();
+    final TextEditingController bloodSugarPostMealController =
+        TextEditingController();
 
     showDialog(
       context: context,
@@ -126,13 +131,26 @@ class _HealthPageState extends State<HealthPage> {
             '$_selectedDate 혈당 기록',
             style: const TextStyle(fontFamily: 'Quicksand'),
           ),
-          content: TextField(
-            controller: bloodSugarController,
-            decoration: const InputDecoration(
-              labelText: '혈당',
-              hintText: 'mg/dL',
-            ),
-            keyboardType: TextInputType.number,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: bloodSugarFastingController,
+                decoration: const InputDecoration(
+                  labelText: '혈당 (공복)',
+                  hintText: 'mg/dL',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: bloodSugarPostMealController,
+                decoration: const InputDecoration(
+                  labelText: '혈당 (식후)',
+                  hintText: 'mg/dL',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -147,11 +165,17 @@ class _HealthPageState extends State<HealthPage> {
                   const Text('저장', style: TextStyle(fontFamily: 'Quicksand')),
               onPressed: () {
                 setState(() {
-                  _healthData['혈당']!['value'] =
-                      int.parse(bloodSugarController.text);
-                  _healthData['혈당']!['data'].add(BloodSugarData(
+                  _healthData['혈당']!['fasting'] =
+                      int.parse(bloodSugarFastingController.text);
+                  _healthData['혈당']!['postMeal'] =
+                      int.parse(bloodSugarPostMealController.text);
+                  _healthData['혈당']!['dataFasting'].add(BloodSugarData(
                     _selectedDate,
-                    int.parse(bloodSugarController.text).toDouble(),
+                    int.parse(bloodSugarFastingController.text).toDouble(),
+                  ));
+                  _healthData['혈당']!['dataPostMeal'].add(BloodSugarData(
+                    _selectedDate,
+                    int.parse(bloodSugarPostMealController.text).toDouble(),
                   ));
                 });
                 Navigator.of(context).pop();
@@ -210,6 +234,23 @@ class _HealthPageState extends State<HealthPage> {
         );
       },
     );
+  }
+
+  List<BloodPressureData> _getSortedBloodPressureData() {
+    List<BloodPressureData> data = List.from(_healthData['혈압']!['data']);
+    data.sort((a, b) => a.date.compareTo(b.date));
+    return data;
+  }
+
+  List<BloodSugarData> _getSortedBloodSugarData(List<BloodSugarData> data) {
+    data.sort((a, b) => a.date.compareTo(b.date));
+    return data;
+  }
+
+  List<WeightData> _getSortedWeightData() {
+    List<WeightData> data = List.from(_healthData['체중']!['data']);
+    data.sort((a, b) => a.date.compareTo(b.date));
+    return data;
   }
 
   @override
@@ -283,13 +324,41 @@ class _HealthPageState extends State<HealthPage> {
                 onEdit: () {
                   _selectDate(context, () => _showBloodPressureDialog(context));
                 },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    buildBloodPressureColumn(
-                        '최고', _healthData['혈압']!['high'].toString(), 'mmHg'),
-                    buildBloodPressureColumn(
-                        '최저', _healthData['혈압']!['low'].toString(), 'mmHg'),
+                    Text(
+                      '최고: ${_healthData['혈압']!['high']} / 최저: ${_healthData['혈압']!['low']} mmHg',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Quicksand',
+                      ),
+                    ),
+                    SizedBox(
+                      height: 150,
+                      child: SfCartesianChart(
+                        primaryXAxis: CategoryAxis(),
+                        series: <ChartSeries>[
+                          LineSeries<BloodPressureData, String>(
+                            dataSource: _getSortedBloodPressureData(),
+                            xValueMapper: (BloodPressureData data, _) =>
+                                data.date,
+                            yValueMapper: (BloodPressureData data, _) =>
+                                data.high,
+                            name: '최고',
+                          ),
+                          LineSeries<BloodPressureData, String>(
+                            dataSource: _getSortedBloodPressureData(),
+                            xValueMapper: (BloodPressureData data, _) =>
+                                data.date,
+                            yValueMapper: (BloodPressureData data, _) =>
+                                data.low,
+                            name: '최저',
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -317,8 +386,7 @@ class _HealthPageState extends State<HealthPage> {
                         primaryXAxis: CategoryAxis(),
                         series: <ChartSeries>[
                           LineSeries<WeightData, String>(
-                            dataSource:
-                                _healthData['체중']!['data'].cast<WeightData>(),
+                            dataSource: _getSortedWeightData(),
                             xValueMapper: (WeightData data, _) => data.date,
                             yValueMapper: (WeightData data, _) => data.weight,
                           ),
@@ -339,7 +407,7 @@ class _HealthPageState extends State<HealthPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${_healthData['혈당']!['value']} mg/dL',
+                      '공복: ${_healthData['혈당']!['fasting']} / 식후: ${_healthData['혈당']!['postMeal']} mg/dL',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -352,11 +420,22 @@ class _HealthPageState extends State<HealthPage> {
                         primaryXAxis: CategoryAxis(),
                         series: <ChartSeries>[
                           LineSeries<BloodSugarData, String>(
-                            dataSource: _healthData['혈당']!['data']
-                                .cast<BloodSugarData>(),
+                            dataSource: _getSortedBloodSugarData(
+                                _healthData['혈당']!['dataFasting']
+                                    .cast<BloodSugarData>()),
                             xValueMapper: (BloodSugarData data, _) => data.date,
                             yValueMapper: (BloodSugarData data, _) =>
                                 data.value,
+                            name: '공복',
+                          ),
+                          LineSeries<BloodSugarData, String>(
+                            dataSource: _getSortedBloodSugarData(
+                                _healthData['혈당']!['dataPostMeal']
+                                    .cast<BloodSugarData>()),
+                            xValueMapper: (BloodSugarData data, _) => data.date,
+                            yValueMapper: (BloodSugarData data, _) =>
+                                data.value,
+                            name: '식후',
                           ),
                         ],
                       ),
@@ -409,32 +488,6 @@ class _HealthPageState extends State<HealthPage> {
             child,
           ],
         ),
-      ),
-    );
-  }
-
-  // 혈압 컬럼 위젯 생성
-  Widget buildBloodPressureColumn(String label, String value, String unit) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Column(
-        children: [
-          Text(label,
-              style:
-                  const TextStyle(color: Colors.grey, fontFamily: 'Quicksand')),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Quicksand',
-            ),
-          ),
-          Text(unit,
-              style:
-                  const TextStyle(color: Colors.grey, fontFamily: 'Quicksand')),
-        ],
       ),
     );
   }

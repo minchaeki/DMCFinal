@@ -16,8 +16,10 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = [
     const HomePage(),
     const HealthPage(),
-    const ReportPage(),
     const FoodLogPage(), // 기록 페이지
+    const ReportPage(
+      result: {},
+    ),
   ]; // 각 탭에 대응하는 페이지 위젯 목록
 
   @override
@@ -47,12 +49,12 @@ class _MainPageState extends State<MainPage> {
             label: '내 건강', // 내 건강 라벨
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.insert_chart), // 리포트 아이콘
-            label: '리포트', // 리포트 라벨
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.restaurant), // 기록 아이콘
             label: '기록', // 기록 라벨
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.insert_chart), // 리포트 아이콘
+            label: '리포트', // 리포트 라벨
           ),
         ],
       ),

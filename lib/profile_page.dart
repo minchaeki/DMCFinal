@@ -10,9 +10,9 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  String nickname = "맹구"; // 닉네임
-  String birthdate = "2006년 10월 22일"; // 생년월일
-  String gender = "남성"; // 성별
+  String nickname = "매미매미"; // 닉네임
+  String birthdate = "2002년 10월 28일"; // 생년월일
+  String gender = "여성"; // 성별
   final ImagePicker _picker = ImagePicker(); // 이미지 선택기
   String? _profileImagePath = 'assets/profile_image.png'; // 프로필 이미지 경로
 
